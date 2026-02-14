@@ -37,6 +37,7 @@
         <label for="FlightType">Tipo de Vuelo</label>
         <select id="FlightType" name="FlightType" aria-label="Tipo de vuelo">
           <option value="vuelo_local" selected>Vuelo Local</option>
+          <option value="vuelo_deportivo">Vuelo Deportivo</option>
         </select>
       </div>
 
@@ -94,6 +95,8 @@
       const Identification = IdentificationRaw.join('  ');
       const TimeRaw = document.getElementById('Time').value.split('');
       const Time = TimeRaw.join('  ');
+      const FlightType = document.getElementById('FlightType').value;
+      const pdfPath = FlightType === 'vuelo_deportivo' ? 'formularioDeportivo.pdf' : 'formulario.pdf';
       const Persons = document.getElementById('Persons').value;
       const Colour = document.getElementById('Colour').value;
       const Phone = document.getElementById('Phone').value;
@@ -102,8 +105,8 @@
 
       // Intentar cargar PDF base
       try {
-        const existingPdfBytes = await fetch('formulario.pdf').then(res => {
-          if (!res.ok) throw new Error('No se pudo obtener formulario.pdf');
+        const existingPdfBytes = await fetch(pdfPath).then(res => {
+          if (!res.ok) throw new Error('No se pudo obtener ' + pdfPath);
           return res.arrayBuffer();
         });
         const pdfDoc = await PDFDocument.load(existingPdfBytes);
