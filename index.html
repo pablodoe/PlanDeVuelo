@@ -1,19 +1,77 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Plan de Vuelo</title>
+  <style>
+    :root{--max-width:720px;--gap:12px;--accent:#0b5fff}
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;line-height:1.4;background:#f7f9fc;color:#0b1b2a;padding:16px}
+    .container{max-width:var(--max-width);margin:0 auto;background:#fff;padding:18px;border-radius:10px;box-shadow:0 6px 18px rgba(9,30,66,.08)}
+    h1{font-size:1.25rem;margin:0 0 12px}
+    form{display:flex;flex-direction:column;gap:var(--gap)}
+    .form-group{display:flex;flex-direction:column}
+    label{font-weight:600;font-size:.95rem;margin-bottom:6px}
+    input[type="text"], input[type="tel"], input[type="time"]{padding:12px 14px;font-size:1rem;border:1px solid #d7e0ea;border-radius:10px;width:100%}
+      input[type="text"], input[type="tel"], input[type="time"], select{padding:12px 14px;font-size:1rem;border:1px solid #d7e0ea;border-radius:10px;width:100%}
+    button[type="submit"]{background:var(--accent);color:#fff;border:none;padding:12px 14px;border-radius:10px;font-size:1rem;cursor:pointer}
+    button[type="submit"]:active{transform:translateY(1px)}
+    .actions{display:flex;justify-content:flex-end}
+    @media(min-width:600px){
+      form .two-col{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+      h1{font-size:1.5rem}
+      .actions{justify-content:flex-end}
+    }
+    @media(max-width:599px){
+      button[type="submit"]{width:100%}
+    }
+  </style>
 </head>
 <body>
-  <h1>Plan de vuelo para planeadores</h1>
-  <form id="pdfForm">
-    <label>Aircraft Identification: <input type="text" id="Identification"></label><br>
-    <label>Time: <input type="text" id="Time"></label><br>
-    <label>Persons on Board: <input type="text" id="Persons"></label><br>
-    <label>Airraft Colours and Markings: <input type="text" id="Colour"></label><br>
-    <label>Remark (Celular): <input type="text" id="Phone"></label><br>
-    <label>Pilot in Command: <input type="text" id="Pilot"></label><br>
-    <button type="submit">Generar PDF</button>
-  </form>
+  <div class="container">
+    <h1>Plan de vuelo para planeadores</h1>
+    <form id="pdfForm" aria-label="Formulario plan de vuelo">
+      <div class="two-col">
+        <div class="form-group">
+          <label for="Identification">Aircraft Identification</label>
+          <input type="text" id="Identification" name="Identification" autocomplete="off" placeholder="Sin incluir LV-" aria-required="true" />
+        </div>
+        <div class="form-group">
+          <label for="Time">Time</label>
+          <input type="text" id="Time" name="Time" autocomplete="off" placeholder="HHMM" aria-required="true" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="Persons">Persons on Board</label>
+          <select id="Persons" name="Persons" aria-label="Persons on Board">
+            <option value="1">1</option>
+            <option value="2">2</option>
+          </select>
+      </div>
+
+      <div class="form-group">
+        <label for="Colour">Aircraft Colours and Markings</label>
+        <input type="text" id="Colour" name="Colour" placeholder="Color y detalles" />
+      </div>
+
+      <div class="form-group">
+        <label for="Phone">Remark (Celular)</label>
+        <input type="tel" id="Phone" name="Phone" inputmode="tel" placeholder="341-6123456" />
+      </div>
+
+      <div class="form-group">
+        <label for="Pilot">Pilot in Command</label>
+        <input type="text" id="Pilot" name="Pilot" placeholder="Nombre del piloto y DNI" />
+      </div>
+
+      <div class="actions">
+        <button type="submit">Generar PDF</button>
+      </div>
+    </form>
+  </div>
 
   <script type="module">
     import { PDFDocument } from 'https://cdn.skypack.dev/pdf-lib';
@@ -27,25 +85,54 @@
       const Phone = document.getElementById('Phone').value;
       const Pilot = document.getElementById('Pilot').value;
 
-      // Cargar PDF base
-      const existingPdfBytes = await fetch('formulario.pdf').then(res => res.arrayBuffer());
-      const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      const form = pdfDoc.getForm();
+      // Intentar cargar PDF base
+      try {
+        const existingPdfBytes = await fetch('formulario.pdf').then(res => {
+          if (!res.ok) throw new Error('No se pudo obtener formulario.pdf');
+          return res.arrayBuffer();
+        });
+        const pdfDoc = await PDFDocument.load(existingPdfBytes);
+        const form = pdfDoc.getForm();
 
-      // Rellenar campos
-      form.getTextField('Identification').setText(Identification);
-      form.getTextField('Time').setText(Time);
-      form.getTextField('Persons').setText(Persons);
-      form.getTextField('Colour').setText(Colour);
-      form.getTextField('Phone').setText(Phone);
-      form.getTextField('Pilot').setText(Pilot);
+        // Intenta rellenar campos si existen
+        try { form.getTextField('Identification').setText(Identification); } catch(e){}
+        try { form.getTextField('Time').setText(Time); } catch(e){}
+        try { form.getTextField('Persons').setText(Persons); } catch(e){}
+        try { form.getTextField('Colour').setText(Colour); } catch(e){}
+        try { form.getTextField('Phone').setText(Phone); } catch(e){}
+        try { form.getTextField('Pilot').setText(Pilot); } catch(e){}
+        try { form.getTextField('Signature').setText(Pilot); } catch(e){}
 
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        window.open(url);
+        return;
+      } catch (err) {
+        // Fallback: crear PDF sencillo
+        try {
+          const pdfDoc = await PDFDocument.create();
+          const page = pdfDoc.addPage([595, 842]);
+          const fontSize = 12;
+          const left = 40;
+          let y = 780;
+          page.drawText(`Aircraft Identification: ${Identification}`, { x: left, y, size: fontSize }); y -= 24;
+          page.drawText(`Time: ${Time}`, { x: left, y, size: fontSize }); y -= 20;
+          page.drawText(`Persons on Board: ${Persons}`, { x: left, y, size: fontSize }); y -= 20;
+          page.drawText(`Colours/Markings: ${Colour}`, { x: left, y, size: fontSize }); y -= 20;
+          page.drawText(`Remark (Celular): ${Phone}`, { x: left, y, size: fontSize }); y -= 20;
+          page.drawText(`Pilot in Command: ${Pilot}`, { x: left, y, size: fontSize });
 
-      // Guardar PDF
-      const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      window.open(url);
+          const pdfBytes = await pdfDoc.save();
+          const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+          const url = URL.createObjectURL(blob);
+          window.open(url);
+          return;
+        } catch (err2) {
+          console.error('Error al generar PDF (fallback):', err2);
+          alert('Error al generar PDF. Consulta la consola.');
+        }
+      }
     });
   </script>
 </body>
