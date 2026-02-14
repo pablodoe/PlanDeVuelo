@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Formulario PDF</title>
+</head>
+<body>
+  <h1>Completar PDF</h1>
+  <form id="pdfForm">
+    <label>Nombre: <input type="text" id="nombre"></label><br>
+    <label>Fecha: <input type="text" id="fecha"></label><br>
+    <button type="submit">Generar PDF</button>
+  </form>
+
+  <script type="module">
+    import { PDFDocument } from 'https://cdn.skypack.dev/pdf-lib';
+
+    document.getElementById('pdfForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nombre = document.getElementById('nombre').value;
+      const fecha = document.getElementById('fecha').value;
+
+      // Cargar PDF base
+      const existingPdfBytes = await fetch('formulario.pdf').then(res => res.arrayBuffer());
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      const form = pdfDoc.getForm();
+
+      // Rellenar campos
+      form.getTextField('Pilot').setText(nombre);
+      form.getTextField('Phone').setText(fecha);
+
+      // Guardar PDF
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      window.open(url);
+    });
+  </script>
+</body>
+</html>
