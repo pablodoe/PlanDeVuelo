@@ -91,9 +91,9 @@
     document.getElementById('pdfForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const IdentificationRaw = document.getElementById('Identification').value.split('');
-      const Identification = IdentificationRaw.join(' ');
+      const Identification = IdentificationRaw.join('  ');
       const TimeRaw = document.getElementById('Time').value.split('');
-      const Time = TimeRaw.join(' ');
+      const Time = TimeRaw.join('  ');
       const Persons = document.getElementById('Persons').value;
       const Colour = document.getElementById('Colour').value;
       const Phone = document.getElementById('Phone').value;
