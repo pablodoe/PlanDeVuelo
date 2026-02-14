@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Formulario PDF</title>
+  <title>Plan de Vuelo</title>
 </head>
 <body>
-  <h1>Completar PDF</h1>
+  <h1>Plan de vuelo para planeadores</h1>
   <form id="pdfForm">
-    <label>Nombre: <input type="text" id="nombre"></label><br>
-    <label>Fecha: <input type="text" id="fecha"></label><br>
+    <label>Aircraft Identification: <input type="text" id="Identification"></label><br>
+    <label>Time: <input type="text" id="Time"></label><br>
+    <label>Persons on Board: <input type="text" id="Persons"></label><br>
+    <label>Airraft Colours and Markings: <input type="text" id="Colour"></label><br>
+    <label>Remark (Celular): <input type="text" id="Phone"></label><br>
+    <label>Pilot in Command: <input type="text" id="Pilot"></label><br>
     <button type="submit">Generar PDF</button>
   </form>
 
@@ -16,8 +20,12 @@
 
     document.getElementById('pdfForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const nombre = document.getElementById('nombre').value;
-      const fecha = document.getElementById('fecha').value;
+      const Identification = document.getElementById('Identification').value;
+      const Time = document.getElementById('Time').value;
+      const Persons = document.getElementById('Persons').value;
+      const Colour = document.getElementById('Colour').value;
+      const Phone = document.getElementById('Phone').value;
+      const Pilot = document.getElementById('Pilot').value;
 
       // Cargar PDF base
       const existingPdfBytes = await fetch('formulario.pdf').then(res => res.arrayBuffer());
@@ -25,8 +33,13 @@
       const form = pdfDoc.getForm();
 
       // Rellenar campos
-      form.getTextField('Pilot').setText(nombre);
-      form.getTextField('Phone').setText(fecha);
+      form.getTextField('Identification').setText(Identification);
+      form.getTextField('Time').setText(Time);
+      form.getTextField('Persons').setText(Persons);
+      form.getTextField('Colour').setText(Colour);
+      form.getTextField('Phone').setText(Phone);
+      form.getTextField('Pilot').setText(Pilot);
+
 
       // Guardar PDF
       const pdfBytes = await pdfDoc.save();
