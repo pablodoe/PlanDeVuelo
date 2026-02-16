@@ -1,0 +1,1 @@
+Este proyecto es para poder generar de manera fácil planes de vuelo en formato PDF que luego deben ser enviados por mail y así poder acceder al TMA Rosario con planeadores

@@ -48,8 +48,19 @@
         </div>
         <div class="form-group">
           <label for="Time">Time</label>
-          <input type="text" id="Time" name="Time" autocomplete="off" placeholder="HHMM" aria-required="true" />
+          <input type="text" id="Time" name="Time" autocomplete="off" placeholder="HHMM (Ej: 1230)" aria-required="true" />
         </div>
+      </div>
+
+      <div class="form-group">
+        <label for="Other">SOLO PARA VUELO DEPORTIVO</label>
+        <label for="Other">Other - Vertical de (Opcional)</label>
+        <input type="text" id="Other" name="Other" placeholder="(Ej: Bigand)" />
+      </div>
+
+      <div class="form-group">
+        <label for="Day">Other - Day of Flight (Opcional)</label>
+        <input type="text" id="Day" name="Day" placeholder="AAMMDD (Ej: 260216)" />
       </div>
 
       <div class="form-group">
@@ -66,7 +77,7 @@
       </div>
 
       <div class="form-group">
-        <label for="Phone">Remark (Celular)</label>
+        <label for="Phone">Remark - Celular</label>
         <input type="tel" id="Phone" name="Phone" inputmode="tel" placeholder="341-6123456" />
       </div>
 
@@ -97,6 +108,10 @@
       const Time = TimeRaw.join('  ');
       const FlightType = document.getElementById('FlightType').value;
       const pdfPath = FlightType === 'vuelo_deportivo' ? 'formularioDeportivo.pdf' : 'formulario.pdf';
+      const DayRaw = document.getElementById('Day').value;
+      const Day = DayRaw ? ' DOF/' + DayRaw : '';
+      const OtherRaw = FlightType === 'vuelo_deportivo' ? document.getElementById('Other').value : '';
+      const Other = Day ? OtherRaw + Day : OtherRaw;
       const Persons = document.getElementById('Persons').value;
       const Colour = document.getElementById('Colour').value;
       const Phone = document.getElementById('Phone').value;
@@ -115,6 +130,8 @@
         // Intenta rellenar campos si existen
         try { form.getTextField('Identification').setText(Identification); } catch(e){}
         try { form.getTextField('Time').setText(Time); } catch(e){}
+        try { form.getTextField('Other').setText(Other); } catch(e){}
+        try { form.getTextField('Other').setText(Other); } catch(e){}
         try { form.getTextField('Persons').setText(Persons); } catch(e){}
         try { form.getTextField('Colour').setText(Colour); } catch(e){}
         try { form.getTextField('Phone').setText(Phone); } catch(e){}
@@ -136,6 +153,7 @@
           let y = 780;
           page.drawText(`Aircraft Identification: ${Identification}`, { x: left, y, size: fontSize }); y -= 24;
           page.drawText(`Time: ${Time}`, { x: left, y, size: fontSize }); y -= 20;
+          page.drawText(`Other: ${Other}`, { x: left, y, size: fontSize }); y -= 20;
           page.drawText(`Persons on Board: ${Persons}`, { x: left, y, size: fontSize }); y -= 20;
           page.drawText(`Colours/Markings: ${Colour}`, { x: left, y, size: fontSize }); y -= 20;
           page.drawText(`Remark (Celular): ${Phone}`, { x: left, y, size: fontSize }); y -= 20;
