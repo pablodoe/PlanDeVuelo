@@ -238,9 +238,9 @@
             const signatureImage = await pdfDoc.embedPng(signature);
             firstPage.drawImage(signatureImage, { x: 50, y: 40, width: 150, height: 40 });
           } catch(e){}
-        } //else {
-          //try { form.getTextField('Signature').setText(Pilot); } catch(e){}
-        //}
+        } else {
+          try { form.getTextField('Signature').setText(Pilot); } catch(e){}
+        }
 
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
