@@ -16,9 +16,14 @@
     label{font-weight:600;font-size:.95rem;margin-bottom:6px}
     input[type="text"], input[type="tel"], input[type="time"]{padding:12px 14px;font-size:1rem;border:1px solid #d7e0ea;border-radius:10px;width:100%}
       input[type="text"], input[type="tel"], input[type="time"], select{padding:12px 14px;font-size:1rem;border:1px solid #d7e0ea;border-radius:10px;width:100%}
-    button[type="submit"]{background:var(--accent);color:#fff;border:none;padding:12px 14px;border-radius:10px;font-size:1rem;cursor:pointer}
-    button[type="submit"]:active{transform:translateY(1px)}
+    button[type="submit"], .btn{background:var(--accent);color:#fff;border:none;padding:12px 14px;border-radius:10px;font-size:1rem;cursor:pointer}
+    button[type="submit"]:active, .btn:active{transform:translateY(1px)}
+    .btn{background:#666;margin-right:8px}
+    .btn:last-child{margin-right:0}
+    .button-group{display:flex;gap:8px;flex-wrap:wrap}
     .actions{display:flex;justify-content:flex-end}
+    #signaturePad{border:2px solid #d7e0ea;border-radius:10px;display:block;width:100%;height:200px;touch-action:none;background:#f9f9f9}
+    .signature-container{display:flex;flex-direction:column}
     @media(min-width:600px){
       form .two-col{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
       h1{font-size:1.5rem}
@@ -91,6 +96,19 @@
         <input type="text" id="PilotDNI" name="PilotDNI" placeholder="DNI del piloto" />
       </div>
 
+      <div class="form-group signature-container">
+        <label for="signaturePad">Firma del Piloto (toca para firmar)</label>
+        <canvas id="signaturePad"></canvas>
+        <div class="button-group" style="margin-top:8px">
+          <button type="button" class="btn" id="clearSignature">Limpiar firma</button>
+          <button type="button" class="btn" id="saveSignature" style="background:#28a745">Confirmar firma</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label id="signatureStatus" style="font-size:0.9rem;color:#666">Estado: No firmado</label>
+      </div>
+
       <div class="actions">
         <button type="submit">Generar PDF</button>
       </div>
@@ -99,6 +117,76 @@
 
   <script type="module">
     import { PDFDocument } from 'https://cdn.skypack.dev/pdf-lib';
+
+    // Configuración del canvas para firma
+    const canvas = document.getElementById('signaturePad');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let signatureData = null;
+
+    // Ajustar tamaño del canvas
+    function resizeCanvas() {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      ctx.fillStyle = '#f9f9f9';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+    }
+    resizeCanvas();
+
+    // Función para obtener coordenadas
+    function getCoordinates(e) {
+      const rect = canvas.getBoundingClientRect();
+      if (e.touches) {
+        return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+      } else {
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      }
+    }
+
+    // Eventos de dibujo
+    canvas.addEventListener('pointerdown', (e) => {
+      isDrawing = true;
+      const { x, y } = getCoordinates(e);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!isDrawing) return;
+      const { x, y } = getCoordinates(e);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    });
+
+    canvas.addEventListener('pointerup', () => {
+      isDrawing = false;
+    });
+
+    canvas.addEventListener('pointerleave', () => {
+      isDrawing = false;
+    });
+
+    // Limpiar firma
+    document.getElementById('clearSignature').addEventListener('click', (e) => {
+      e.preventDefault();
+      ctx.fillStyle = '#f9f9f9';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      signatureData = null;
+      document.getElementById('signatureStatus').textContent = 'Estado: No firmado';
+      document.getElementById('saveSignature').style.background = '#28a745';
+    });
+
+    // Guardar firma
+    document.getElementById('saveSignature').addEventListener('click', (e) => {
+      e.preventDefault();
+      signatureData = canvas.toDataURL('image/png');
+      document.getElementById('signatureStatus').textContent = 'Estado: ✓ Firmado';
+      document.getElementById('saveSignature').style.background = '#0b5fff';
+    });
 
     document.getElementById('pdfForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -117,6 +205,7 @@
       const Phone = document.getElementById('Phone').value;
       const Pilot = document.getElementById('Pilot').value;
       const PilotDNI = document.getElementById('PilotDNI').value;
+      const signature = signatureData;
 
       // Intentar cargar PDF base
       try {
@@ -158,7 +247,17 @@
           page.drawText(`Colours/Markings: ${Colour}`, { x: left, y, size: fontSize }); y -= 20;
           page.drawText(`Remark (Celular): ${Phone}`, { x: left, y, size: fontSize }); y -= 20;
           page.drawText(`Pilot in Command: ${Pilot + " " + PilotDNI}`, { x: left, y, size: fontSize }); y -= 20;
-          page.drawText(`Signature: ${Pilot}`, { x: left, y, size: fontSize });
+          page.drawText(`Signature:`, { x: left, y, size: fontSize }); 
+          
+          // Agregar firma si existe
+          if (signature) {
+            try {
+              const signatureImage = await pdfDoc.embedPng(signature);
+              page.drawImage(signatureImage, { x: left, y: y - 80, width: 150, height: 60 });
+            } catch(e) {
+              page.drawText('(Firma firmada)', { x: left, y: y - 20, size: 10 });
+            }
+          }
 
           const pdfBytes = await pdfDoc.save();
           const blob = new Blob([pdfBytes], { type: 'application/pdf' });
