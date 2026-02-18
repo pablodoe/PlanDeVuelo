@@ -215,6 +215,8 @@
         });
         const pdfDoc = await PDFDocument.load(existingPdfBytes);
         const form = pdfDoc.getForm();
+        const pages = pdfDoc.getPages();
+        const firstPage = pages[0];
 
         // Intenta rellenar campos si existen
         try { form.getTextField('Identification').setText(Identification); } catch(e){}
@@ -225,7 +227,20 @@
         try { form.getTextField('Colour').setText(Colour); } catch(e){}
         try { form.getTextField('Phone').setText(Phone); } catch(e){}
         try { form.getTextField('Pilot').setText(Pilot + " " + PilotDNI); } catch(e){}
-        try { form.getTextField('Signature').setText(Pilot); } catch(e){}
+        
+        // Tratar campo de firma como imagen si existe
+        if (signature) {
+          try {
+            const signatureField = form.getTextField('Signature');
+            signatureField.setText('');
+          } catch(e){}
+          try {
+            const signatureImage = await pdfDoc.embedPng(signature);
+            firstPage.drawImage(signatureImage, { x: 40, y: 100, width: 150, height: 60 });
+          } catch(e){}
+        } else {
+          try { form.getTextField('Signature').setText(Pilot); } catch(e){}
+        }
 
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
