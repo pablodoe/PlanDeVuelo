@@ -236,7 +236,7 @@
           } catch(e){}
           try {
             const signatureImage = await pdfDoc.embedPng(signature);
-            firstPage.drawImage(signatureImage, { x: 50, y: 40, width: 150, height: 40 });
+            firstPage.drawImage(signatureImage, { x: 50, y: 50, width: 150, height: 40 });
           } catch(e){}
         } else {
           try { form.getTextField('Signature').setText(Pilot); } catch(e){}
